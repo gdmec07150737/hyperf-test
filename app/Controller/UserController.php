@@ -98,8 +98,7 @@ class UserController
         } catch (Throwable $throwable) {
             throw new ServerException("更新token失败！".$throwable->getMessage(), 500);
         }
-        var_dump($token);
-        return ['code' => 200, 'msg' => '登录成功！', 'token' => $token];
+        return ['code' => 200, 'msg' => '登录成功！', 'token' => $token, 'id' => $user->id];
     }
 
     /**
