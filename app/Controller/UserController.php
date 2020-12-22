@@ -18,6 +18,7 @@ use Hyperf\HttpServer\Annotation\DeleteMapping;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\PostMapping;
 use Throwable;
+use function _HumbugBoxfb21822734fc\React\Promise\Stream\first;
 
 /**
  * @Controller()
@@ -51,6 +52,24 @@ class UserController
         return ['code' => 200, 'msg' => '注册成功！'];
     }
 
+    /**
+     * 用户退出登录
+     * @GetMapping(path="logout")
+     * @param UserDeleteRequest $request
+     * @return array
+     */
+    public function Logout(UserDeleteRequest $request): array
+    {
+        /** @var User $uer */
+        $uer = User::query()->where('id' , $request->validated()['id'])->first();
+        $uer->token = '';
+        try {
+            $uer->save();
+        } catch (Throwable $throwable) {
+            throw new ServerException("退出登录失败，请联系管理员！", 500);
+        }
+        return ['code' => 200, 'msg' => '退出登录成功！'];
+    }
 
     /**
      * 用户登录
@@ -72,8 +91,15 @@ class UserController
             $this->session->remove('userInfo');
             throw new ServerException("该用户账号被禁止登录，请联系管理员！", 500);
         }
-        $this->session->set('userInfo', $user->email);
-        return ['code' => 200, 'msg' => '登录成功！'];
+        $token = md5($user->email . time());
+        $user->token = $token;
+        try {
+            $user->save();
+        } catch (Throwable $throwable) {
+            throw new ServerException("更新token失败！".$throwable->getMessage(), 500);
+        }
+        var_dump($token);
+        return ['code' => 200, 'msg' => '登录成功！', 'token' => $token];
     }
 
     /**
@@ -93,9 +119,6 @@ class UserController
      */
     public function AddUser(UserRegisteredRequest $request): array
     {
-        if (!$this->session->get('userInfo', '')) {
-            throw new ServerException("未登录，请登录再操作！", 401);
-        }
         $User = new User();
         $User->email = $request->validated()['email'];
         $User->salt = uniqid('', false);
@@ -116,9 +139,6 @@ class UserController
      */
     public function DeleteUser(UserDeleteRequest $request): array
     {
-        if (!$this->session->get('userInfo', '')) {
-            throw new ServerException("未登录，请登录再操作！", 401);
-        }
         try {
             User::destroy($request->validated()['id']);
         } catch (Throwable $throwable) {
@@ -135,9 +155,6 @@ class UserController
      */
     public function UpdateUserInfo(UserUpdateRequest $request): array
     {
-        if (!$this->session->get('userInfo', '')) {
-            throw new ServerException("未登录，请登录再操作！", 401);
-        }
         /** @var User $user */
         $user = User::query()->find($request->validated()['id']);
         if (!$user) {
@@ -161,9 +178,6 @@ class UserController
      */
     public function UpdateUserState(UserDeleteRequest $request)
     {
-        if (!$this->session->get('userInfo', '')) {
-            throw new ServerException("未登录，请登录再操作！", 401);
-        }
         /** @var User $User */
         $User = User::query()->find($request->validated()['id']);
         if (!$User) {
@@ -182,9 +196,9 @@ class UserController
      * 查询或者遍历用户账号
      * @GetMapping(path="select_or_query")
      * @param UserSelectRequest $request
-     * @return LengthAwarePaginatorInterface
+     * @return array
      */
-    public function SelectOrQuery(UserSelectRequest $request): LengthAwarePaginatorInterface
+    public function SelectOrQuery(UserSelectRequest $request): array
     {
         $columns = ['id','email','state','created_at'];
         $perPage = (int)$request->validated()['perPage'];
@@ -195,7 +209,7 @@ class UserController
         } else {
             $userList = User::paginate($perPage, $columns, 'page', $page);
         }
-        return $userList;
+        return ['code' => 200, 'data' => $userList];
     }
 
 }
