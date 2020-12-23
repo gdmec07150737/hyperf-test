@@ -10,7 +10,6 @@ use App\Request\UserLoginRequest;
 use App\Request\UserRegisteredRequest;
 use App\Request\UserSelectRequest;
 use App\Request\UserUpdateRequest;
-use Hyperf\Contract\LengthAwarePaginatorInterface;
 use Hyperf\Contract\SessionInterface;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Annotation\Controller;
@@ -18,7 +17,6 @@ use Hyperf\HttpServer\Annotation\DeleteMapping;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\PostMapping;
 use Throwable;
-use function _HumbugBoxfb21822734fc\React\Promise\Stream\first;
 
 /**
  * @Controller()
@@ -175,7 +173,7 @@ class UserController
      * @param UserDeleteRequest $request
      * @return array
      */
-    public function UpdateUserState(UserDeleteRequest $request)
+    public function UpdateUserState(UserDeleteRequest $request): array
     {
         /** @var User $User */
         $User = User::query()->find($request->validated()['id']);
