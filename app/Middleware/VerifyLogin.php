@@ -31,6 +31,9 @@ class VerifyLogin implements MiddlewareInterface
         //用户控制器除了登录和注册方法都需要验证登录
         if ($action[0] === 'App\Controller\UserController' && ($action[1] !== 'Registered' && $action[1] !== 'Login')) {
             $authorization = str_replace("Bearer ", "", $request->getHeader('Authorization'));
+            if (!$authorization[0]) {
+                throw new ServerException("没有token，请重新登录！", 500);
+            }
             /** @var User $user */
             $user = User::query()->where('token', $authorization[0])->first();
             if (!$user) {
