@@ -6,6 +6,7 @@ namespace App\Middleware;
 
 use App\Exception\ServerException;
 use App\Model\User;
+use Hyperf\Utils\Context;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -37,7 +38,9 @@ class VerifyLogin implements MiddlewareInterface
         if (!isset($user->id)) {
             throw new ServerException("该用户账号不存在，请重新登录！", 500);
         }
-
+        $request = Context::override(ServerRequestInterface::class, function () use ($request, $user) {
+            return $request->withAttribute('user', $user);
+        });
         return $handler->handle($request);
     }
 }

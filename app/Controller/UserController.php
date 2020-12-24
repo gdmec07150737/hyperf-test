@@ -55,8 +55,9 @@ class UserController
     public function Logout(UserDeleteRequest $request): array
     {
         /** @var User $uer */
-        $uer = User::query()->where('id' , $request->input('id'))->first();
+        $uer = $request->getAttribute('user');
         $uer->token = '';
+
         try {
             $uer->save();
         } catch (Throwable $throwable) {
