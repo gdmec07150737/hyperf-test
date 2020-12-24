@@ -13,8 +13,10 @@ use App\Request\UserUpdateRequest;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\DeleteMapping;
 use Hyperf\HttpServer\Annotation\GetMapping;
+use Hyperf\HttpServer\Annotation\Middleware;
 use Hyperf\HttpServer\Annotation\PostMapping;
 use Throwable;
+use App\Middleware\VerifyLogin;
 
 /**
  * @Controller()
@@ -46,6 +48,7 @@ class UserController
     /**
      * 用户退出登录
      * @GetMapping(path="logout")
+     * @Middleware(VerifyLogin::class)
      * @param UserDeleteRequest $request
      * @return array
      */
@@ -93,6 +96,7 @@ class UserController
     /**
      * 添加用户账号
      * @PostMapping(path="add_user")
+     * @Middleware(VerifyLogin::class)
      * @param UserRegisteredRequest $request
      * @return array
      */
@@ -113,6 +117,7 @@ class UserController
     /**
      * 删除用户账号
      * @DeleteMapping(path="delete_user")
+     * @Middleware(VerifyLogin::class)
      * @param UserDeleteRequest $request
      * @return array
      */
@@ -129,6 +134,7 @@ class UserController
     /**
      * 修改用户信息
      * @PostMapping(path="update_user")
+     * @Middleware(VerifyLogin::class)
      * @param UserUpdateRequest $request
      * @return array
      */
@@ -153,6 +159,7 @@ class UserController
     /**
      * 修改用户状态
      * @PostMapping(path="update_user_state")
+     * @Middleware(VerifyLogin::class)
      * @param UserDeleteRequest $request
      * @return array
      */
@@ -175,6 +182,7 @@ class UserController
     /**
      * 查询或者遍历用户账号
      * @GetMapping(path="select_or_query")
+     * @Middleware(VerifyLogin::class)
      * @param UserSelectRequest $request
      * @return array
      */
@@ -195,6 +203,7 @@ class UserController
     /**
      * 根据id查询用户信息
      * @GetMapping(path="get_user")
+     * @Middleware(VerifyLogin::class)
      * @param UserDeleteRequest $request
      * @return array
      */
