@@ -10,8 +10,6 @@ use App\Request\UserLoginRequest;
 use App\Request\UserRegisteredRequest;
 use App\Request\UserSelectRequest;
 use App\Request\UserUpdateRequest;
-use Hyperf\Contract\SessionInterface;
-use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\DeleteMapping;
 use Hyperf\HttpServer\Annotation\GetMapping;
@@ -24,11 +22,6 @@ use Throwable;
 class UserController
 {
 
-    /**
-     * @Inject()
-     * @var SessionInterface
-     */
-    private $session;
 
     /**
      * 用户注册
@@ -38,12 +31,12 @@ class UserController
      */
     public function Registered(UserRegisteredRequest $request): array
     {
-        $User = new User();
-        $User->email = $request->validated()['email'];
-        $User->salt = uniqid('', false);
-        $User->password = md5($request->validated()['password'] . $User->salt);
+        $user = new User();
+        $user->email = $request->input('email');
+        $user->salt = uniqid('', false);
+        $user->password = md5($request->input('password') . $user->salt);
         try {
-            $User->save();
+            $user->save();
         } catch (Throwable $throwable) {
             throw new ServerException("注册失败，请联系管理员！", 500);
         }
@@ -59,7 +52,7 @@ class UserController
     public function Logout(UserDeleteRequest $request): array
     {
         /** @var User $uer */
-        $uer = User::query()->where('id' , $request->validated()['id'])->first();
+        $uer = User::query()->where('id' , $request->input('id'))->first();
         $uer->token = '';
         try {
             $uer->save();
@@ -79,14 +72,12 @@ class UserController
     {
         /** @var User $user */
         $user = User::query()
-            ->where('email', $request->validated()['email'])
+            ->where('email', $request->input('email'))
             ->first();
-        if (!$user || md5($request->validated()['password'] . $user->salt) !== $user->password) {
-            $this->session->remove('userInfo');
+        if (!isset($user->id) || md5($request->input('password') . $user->salt) !== $user->password) {
             throw new ServerException("用户名或密码错误！", 500);
         }
         if ($user->state !== 'normal') {
-            $this->session->remove('userInfo');
             throw new ServerException("该用户账号被禁止登录，请联系管理员！", 500);
         }
         $token = md5($user->email . time());
@@ -100,15 +91,6 @@ class UserController
     }
 
     /**
-     * 测试获取session
-     * @GetMapping(path="test_get_session")
-     */
-    public function TestGetSession(): string
-    {
-        return $this->session->get('userInfo', 'not have session');
-    }
-
-    /**
      * 添加用户账号
      * @PostMapping(path="add_user")
      * @param UserRegisteredRequest $request
@@ -116,12 +98,12 @@ class UserController
      */
     public function AddUser(UserRegisteredRequest $request): array
     {
-        $User = new User();
-        $User->email = $request->validated()['email'];
-        $User->salt = uniqid('', false);
-        $User->password = md5($request->validated()['password'] . $User->salt);
+        $user = new User();
+        $user->email = $request->input('email');
+        $user->salt = uniqid('', false);
+        $user->password = md5($request->input('password') . $user->salt);
         try {
-            $User->save();
+            $user->save();
         } catch (Throwable $throwable) {
             throw new ServerException("添加失败，请检查该邮箱是否已注册！", 500);
         }
@@ -137,7 +119,7 @@ class UserController
     public function DeleteUser(UserDeleteRequest $request): array
     {
         try {
-            User::destroy($request->validated()['id']);
+            User::destroy($request->input('id'));
         } catch (Throwable $throwable) {
             throw new ServerException('删除失败！请联系开发者', 500);
         }
@@ -153,12 +135,13 @@ class UserController
     public function UpdateUserInfo(UserUpdateRequest $request): array
     {
         /** @var User $user */
-        $user = User::query()->find($request->validated()['id']);
-        if (!$user) {
+        $user = User::query()->find($request->input('id'));
+        if (!isset($user->id)) {
             throw new ServerException("用户不存在，请刷新后再操作！", 500);
         }
-        $user->email = $request->validated()['email'];
-        $user->password = md5($request->validated()['password'] . $user->salt);
+        $user->email = $request->input('email');
+        $user->state = $request->input('state');
+        $user->password = md5($request->input('password') . $user->salt);
         try {
             $user->save();
         } catch (Throwable $throwable) {
@@ -175,14 +158,14 @@ class UserController
      */
     public function UpdateUserState(UserDeleteRequest $request): array
     {
-        /** @var User $User */
-        $User = User::query()->find($request->validated()['id']);
-        if (!$User) {
+        /** @var User $user */
+        $user = User::query()->find($request->input('id'));
+        if (!isset($user->id)) {
             throw new ServerException('用户不存在，请刷新后再操作！', 500);
         }
-        $User->state = $request->validated()['state'];
+        $user->state = $request->input('state');
         try {
-            $User->save();
+            $user->save();
         } catch (Throwable $throwable) {
             throw new ServerException('修改用户状态失败！' . $throwable->getMessage(), 500);
         }
@@ -198,15 +181,31 @@ class UserController
     public function SelectOrQuery(UserSelectRequest $request): array
     {
         $columns = ['id','email','state','created_at'];
-        $perPage = (int)$request->validated()['perPage'];
-        $page = (int)$request->validated()['page'];
+        $perPage = (int)$request->input('perPage');
+        $page = (int)$request->input('page');
         if (isset($request->validated()['email'])) {
-            $userList = User::where('email', 'like' ,"{$request->validated()['email']}%")
+            $userList = User::where('email', 'like' ,"{$request->input('email')}%")
                 ->paginate($perPage, $columns, 'page', $page);
         } else {
             $userList = User::paginate($perPage, $columns, 'page', $page);
         }
         return ['code' => 200, 'data' => $userList];
+    }
+
+    /**
+     * 根据id查询用户信息
+     * @GetMapping(path="get_user")
+     * @param UserDeleteRequest $request
+     * @return array
+     */
+    public function GetUserById(UserDeleteRequest $request): array
+    {
+        /** @var User $user */
+        $user = User::query()->find($request->input('id'));
+        if (!isset($user->id)) {
+            throw new ServerException('用户不存在，请刷新后再操作！', 500);
+        }
+        return ['code' => 200, 'msg' => '查询用户成功!', 'data' => $user];
     }
 
 }

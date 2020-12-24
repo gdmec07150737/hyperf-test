@@ -22,7 +22,7 @@ class UserSelectRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => 'sometimes|required',
+            'email' => 'nullable',
             'perPage' => 'required|integer|max:10|min:1',
             'page' => 'required|integer',
         ];

@@ -25,6 +25,7 @@ class UserUpdateRequest extends FormRequest
             'email' => 'required|max:200|email',
             'password' => 'required|max:50|min:6',
             'id' => 'required|integer',
+            'state' => 'required|in:normal,abnormal',
         ];
     }
 
