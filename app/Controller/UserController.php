@@ -54,12 +54,12 @@ class UserController
      */
     public function Logout(UserDeleteRequest $request): array
     {
-        /** @var User $uer */
-        $uer = $request->getAttribute('user');
-        $uer->token = '';
-
+        /** @var User $user */
+        $user = $request->getAttribute('user');
+        $user->token = '';
+        $user->token_time_out = time();
         try {
-            $uer->save();
+            $user->save();
         } catch (Throwable $throwable) {
             throw new ServerException("退出登录失败，请联系管理员！", 500);
         }
@@ -86,6 +86,8 @@ class UserController
         }
         $token = md5($user->email . time());
         $user->token = $token;
+        //token过期时间设置为5分钟
+        $user->token_time_out = time() + (5*60);
         try {
             $user->save();
         } catch (Throwable $throwable) {

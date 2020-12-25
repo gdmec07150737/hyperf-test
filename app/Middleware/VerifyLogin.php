@@ -38,6 +38,13 @@ class VerifyLogin implements MiddlewareInterface
         if (!isset($user->id)) {
             throw new ServerException("该用户账号不存在，请重新登录！", 500);
         }
+        //token过期，要用户重新登录
+        if ($user->token_time_out < time()) {
+            throw new ServerException("token已过期，请重新登录！", 401);
+        }
+        //更新token过期时间为5分钟后
+        $user->token_time_out = time() + (5*60);
+        $user->save();
         $request = Context::override(ServerRequestInterface::class, function () use ($request, $user) {
             return $request->withAttribute('user', $user);
         });
