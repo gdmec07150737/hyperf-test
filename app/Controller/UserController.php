@@ -1,42 +1,164 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Exception\ServerException;
-use App\Model\User;
-use App\Request\UserDeleteRequest;
-use App\Request\UserLoginRequest;
-use App\Request\UserRegisteredRequest;
-use App\Request\UserSelectRequest;
-use App\Request\UserUpdateRequest;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\DeleteMapping;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\Middleware;
 use Hyperf\HttpServer\Annotation\PostMapping;
+use Hyperf\HttpServer\Contract\RequestInterface;
+use Hyperf\HttpServer\Contract\ResponseInterface;
+use League\OAuth2\Server\Exception\OAuthServerException;
+use Psr\Http\Message\ResponseInterface as Psr7ResponseInterface;
 use Throwable;
+use App\Authorization\Entity\UserEntity;
+use App\Authorization\SetAuthorizationServer;
+use App\Exception\ServerException;
+use App\Model\User;
 use App\Middleware\VerifyLogin;
+use App\Request\UserDeleteRequest;
+use App\Request\UserLoginRequest;
+use App\Request\UserRegisteredRequest;
+use App\Request\UserSelectRequest;
+use App\Request\UserUpdateRequest;
 
 /**
  * @Controller()
  */
 class UserController
 {
+    /**
+     * @PostMapping(path="test-client-credentials-grant")
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @return Psr7ResponseInterface
+     */
+    public function testClientCredentialsGrant(
+        RequestInterface $request,
+        ResponseInterface $response
+    ): ?Psr7ResponseInterface {
+        $authorizationServer = new SetAuthorizationServer();
+        $server = $authorizationServer->clientCredentialsGrant();
+        try {
+            return $server->respondToAccessTokenRequest($request, $response);
+        } catch (OAuthServerException $e) {
+            return $e->generateHttpResponse($response);
+        } catch (Throwable $e) {
+            throw new ServerException($e->getMessage(), 500);
+        }
+    }
 
+    /**
+     * @PostMapping(path="test-password-grant")
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @return Psr7ResponseInterface
+     */
+    public function testPasswordGrant(RequestInterface $request, ResponseInterface $response): ?Psr7ResponseInterface
+    {
+        $authorizationServer = new SetAuthorizationServer();
+        $server = $authorizationServer->passwordGrant();
+        try {
+            return $server->respondToAccessTokenRequest($request, $response);
+        } catch (OAuthServerException $e) {
+            return $e->generateHttpResponse($response);
+        } catch (Throwable $e) {
+            throw new ServerException($e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * @PostMapping(path="test-refresh-token-grant")
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @return Psr7ResponseInterface
+     */
+    public function testRefreshTokenGrant(
+        RequestInterface $request,
+        ResponseInterface $response
+    ): ?Psr7ResponseInterface {
+        $authorizationServer = new SetAuthorizationServer();
+        $server = $authorizationServer->refreshTokenGrant();
+        try {
+            return $server->respondToAccessTokenRequest($request, $response);
+        } catch (OAuthServerException $e) {
+            return $e->generateHttpResponse($response);
+        } catch (Throwable $e) {
+            throw new ServerException($e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * @GetMapping(path="test-implicit-grant")
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @return Psr7ResponseInterface
+     */
+    public function testImplicitGrant(RequestInterface $request, ResponseInterface $response): ?Psr7ResponseInterface
+    {
+        $authorizationServer = new SetAuthorizationServer();
+        $server = $authorizationServer->implicitGrant();
+        try {
+            $authRequest = $server->validateAuthorizationRequest($request);
+            $authRequest->setUser(new UserEntity('test'));
+            $authRequest->setAuthorizationApproved(true);
+            return $server->completeAuthorizationRequest($authRequest, $response);
+        } catch (OAuthServerException $e) {
+            return $e->generateHttpResponse($response);
+        } catch (Throwable $e) {
+            throw new ServerException($e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * @PostMapping(path="test-Authorization-code-grant")
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @return Psr7ResponseInterface
+     */
+    public function testAuthorizationCodeGrant(
+        RequestInterface $request,
+        ResponseInterface $response
+    ): ?Psr7ResponseInterface {
+        $authorizationServer = new SetAuthorizationServer();
+        try {
+            $server = $authorizationServer->authorizationCodeGrant();
+            $authRequest = $server->validateAuthorizationRequest($request);
+            $authRequest->setUser(new UserEntity('user_test'));
+            $authRequest->setAuthorizationApproved(true);
+            return $server->completeAuthorizationRequest($authRequest, $response);
+        } catch (OAuthServerException $e) {
+            return $e->generateHttpResponse($response);
+        } catch (Throwable $e) {
+            throw new ServerException($e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * @GetMapping(path="/redirect")
+     * @return bool
+     */
+    public function testRedirect(): bool
+    {
+        return true;
+    }
 
     /**
      * 用户注册
+     *
      * @PostMapping(path="registered")
      * @param UserRegisteredRequest $request
      * @return array
      */
-    public function Registered(UserRegisteredRequest $request): array
+    public function registered(UserRegisteredRequest $request): array
     {
         $user = new User();
-        $user->email = $request->input('email');
+        $user->email = trim($request->input('email'));
         $user->salt = uniqid('', false);
-        $user->password = md5($request->input('password') . $user->salt);
+        $user->password = md5(trim($request->input('password')) . $user->salt);
         try {
             $user->save();
         } catch (Throwable $throwable) {
@@ -47,12 +169,13 @@ class UserController
 
     /**
      * 用户退出登录
+     *
      * @GetMapping(path="logout")
      * @Middleware(VerifyLogin::class)
      * @param UserDeleteRequest $request
      * @return array
      */
-    public function Logout(UserDeleteRequest $request): array
+    public function logout(UserDeleteRequest $request): array
     {
         /** @var User $user */
         $user = $request->getAttribute('user');
@@ -68,17 +191,18 @@ class UserController
 
     /**
      * 用户登录
+     *
      * @PostMapping(path="login")
      * @param UserLoginRequest $request
      * @return array
      */
-    public function Login(UserLoginRequest $request): array
+    public function login(UserLoginRequest $request): array
     {
         /** @var User $user */
         $user = User::query()
-            ->where('email', $request->input('email'))
+            ->where('email', trim($request->input('email')))
             ->first();
-        if (!isset($user->id) || md5($request->input('password') . $user->salt) !== $user->password) {
+        if (!isset($user->id) || md5(trim($request->input('password')) . $user->salt) !== $user->password) {
             throw new ServerException("用户名或密码错误！", 500);
         }
         if ($user->state !== 'normal') {
@@ -86,8 +210,8 @@ class UserController
         }
         $token = md5($user->email . time());
         $user->token = $token;
-        //token过期时间设置为5分钟
-        $user->token_time_out = time() + (5*60);
+        // Token 过期时间设置为 5 分钟
+        $user->token_time_out = time() + ( 5 * 60 );
         try {
             $user->save();
         } catch (Throwable $throwable) {
@@ -98,17 +222,18 @@ class UserController
 
     /**
      * 添加用户账号
+     *
      * @PostMapping(path="add_user")
      * @Middleware(VerifyLogin::class)
      * @param UserRegisteredRequest $request
      * @return array
      */
-    public function AddUser(UserRegisteredRequest $request): array
+    public function addUser(UserRegisteredRequest $request): array
     {
         $user = new User();
-        $user->email = $request->input('email');
+        $user->email = trim($request->input('email'));
         $user->salt = uniqid('', false);
-        $user->password = md5($request->input('password') . $user->salt);
+        $user->password = md5(trim($request->input('password')) . $user->salt);
         try {
             $user->save();
         } catch (Throwable $throwable) {
@@ -119,15 +244,16 @@ class UserController
 
     /**
      * 删除用户账号
+     *
      * @DeleteMapping(path="delete_user")
      * @Middleware(VerifyLogin::class)
      * @param UserDeleteRequest $request
      * @return array
      */
-    public function DeleteUser(UserDeleteRequest $request): array
+    public function deleteUser(UserDeleteRequest $request): array
     {
         try {
-            User::destroy($request->input('id'));
+            User::destroy(trim($request->input('id')));
         } catch (Throwable $throwable) {
             throw new ServerException('删除失败！请联系开发者', 500);
         }
@@ -136,21 +262,22 @@ class UserController
 
     /**
      * 修改用户信息
+     *
      * @PostMapping(path="update_user")
      * @Middleware(VerifyLogin::class)
      * @param UserUpdateRequest $request
      * @return array
      */
-    public function UpdateUserInfo(UserUpdateRequest $request): array
+    public function updateUserInfo(UserUpdateRequest $request): array
     {
         /** @var User $user */
-        $user = User::query()->find($request->input('id'));
-        if (!isset($user->id)) {
+        $user = User::query()->find(trim($request->input('id')));
+        if (! isset($user->id)) {
             throw new ServerException("用户不存在，请刷新后再操作！", 500);
         }
-        $user->email = $request->input('email');
-        $user->state = $request->input('state');
-        $user->password = md5($request->input('password') . $user->salt);
+        $user->email = trim($request->input('email'));
+        $user->state = trim($request->input('state'));
+        $user->password = md5(trim($request->input('password')) . $user->salt);
         try {
             $user->save();
         } catch (Throwable $throwable) {
@@ -161,19 +288,20 @@ class UserController
 
     /**
      * 修改用户状态
+     *
      * @PostMapping(path="update_user_state")
      * @Middleware(VerifyLogin::class)
      * @param UserDeleteRequest $request
      * @return array
      */
-    public function UpdateUserState(UserDeleteRequest $request): array
+    public function updateUserState(UserDeleteRequest $request): array
     {
         /** @var User $user */
-        $user = User::query()->find($request->input('id'));
-        if (!isset($user->id)) {
+        $user = User::query()->find(trim($request->input('id')));
+        if (! isset($user->id)) {
             throw new ServerException('用户不存在，请刷新后再操作！', 500);
         }
-        $user->state = $request->input('state');
+        $user->state = trim($request->input('state'));
         try {
             $user->save();
         } catch (Throwable $throwable) {
@@ -184,18 +312,20 @@ class UserController
 
     /**
      * 查询或者遍历用户账号
+     *
      * @GetMapping(path="select_or_query")
      * @Middleware(VerifyLogin::class)
      * @param UserSelectRequest $request
      * @return array
      */
-    public function SelectOrQuery(UserSelectRequest $request): array
+    public function selectOrQuery(UserSelectRequest $request): array
     {
         $columns = ['id','email','state','created_at'];
-        $perPage = (int)$request->input('perPage');
-        $page = (int)$request->input('page');
-        if (isset($request->validated()['email'])) {
-            $userList = User::where('email', 'like' ,"{$request->input('email')}%")
+        $perPage = (int)trim($request->input('perPage'));
+        $page = (int)trim($request->input('page'));
+        $email = trim($request->input('email'));
+        if (!empty($email)) {
+            $userList = User::where('email', 'like' ,"{$email}%")
                 ->paginate($perPage, $columns, 'page', $page);
         } else {
             $userList = User::paginate($perPage, $columns, 'page', $page);
@@ -205,15 +335,16 @@ class UserController
 
     /**
      * 根据id查询用户信息
+     *
      * @GetMapping(path="get_user")
      * @Middleware(VerifyLogin::class)
      * @param UserDeleteRequest $request
      * @return array
      */
-    public function GetUserById(UserDeleteRequest $request): array
+    public function getUserById(UserDeleteRequest $request): array
     {
         /** @var User $user */
-        $user = User::query()->find($request->input('id'));
+        $user = User::query()->find(trim($request->input('id')));
         if (!isset($user->id)) {
             throw new ServerException('用户不存在，请刷新后再操作！', 500);
         }

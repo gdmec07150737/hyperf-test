@@ -37,7 +37,8 @@
         "hyperf/tracer": "~2.0.0",
         "hyperf/validation": "^2.0",
       "ext-json": "*",
-        "hyperf/session": "^2.0"
+        "hyperf/session": "^2.0",
+        "league/oauth2-server": "^8.2"
     },
     "require-dev": {
         "swoole/ide-helper": "^4.5",
