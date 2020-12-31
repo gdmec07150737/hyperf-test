@@ -22,7 +22,7 @@ class UserRepository implements UserRepositoryInterface
         if (empty($oauthUser->id) || empty($oauthUser->password)) {
             return null;
         }
-        if (! password_verify($password, $oauthUser->password)) {
+        if (!password_verify($password, $oauthUser->password)) {
             return null;
         }
         return new UserEntity($oauthUser->username);

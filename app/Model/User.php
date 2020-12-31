@@ -1,9 +1,11 @@
 <?php
 
 declare (strict_types=1);
+
 namespace App\Model;
 
 use Carbon\Carbon;
+
 /**
  * @property int $id
  * @property string $email 邮箱

@@ -5,12 +5,12 @@ declare (strict_types=1);
 namespace App\Model;
 
 /**
- * @property string $id 
- * @property int $user_id 
- * @property int $client_id 
- * @property string $scopes 
- * @property int $revoked 
- * @property string $expires_at 
+ * @property string $id
+ * @property int $user_id
+ * @property int $client_id
+ * @property string $scopes
+ * @property int $revoked
+ * @property string $expires_at
  */
 class OauthAuthCode extends Model
 {

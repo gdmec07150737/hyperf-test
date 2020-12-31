@@ -39,7 +39,8 @@ class UserController
     public function testClientCredentialsGrant(
         RequestInterface $request,
         ResponseInterface $response
-    ): ?Psr7ResponseInterface {
+    ): ?Psr7ResponseInterface
+    {
         $authorizationServer = new SetAuthorizationServer();
         $server = $authorizationServer->clientCredentialsGrant();
         try {
@@ -79,7 +80,8 @@ class UserController
     public function testRefreshTokenGrant(
         RequestInterface $request,
         ResponseInterface $response
-    ): ?Psr7ResponseInterface {
+    ): ?Psr7ResponseInterface
+    {
         $authorizationServer = new SetAuthorizationServer();
         $server = $authorizationServer->refreshTokenGrant();
         try {
@@ -122,7 +124,8 @@ class UserController
     public function testAuthorizationCodeGrant(
         RequestInterface $request,
         ResponseInterface $response
-    ): ?Psr7ResponseInterface {
+    ): ?Psr7ResponseInterface
+    {
         $authorizationServer = new SetAuthorizationServer();
         try {
             $server = $authorizationServer->authorizationCodeGrant();
@@ -211,11 +214,11 @@ class UserController
         $token = md5($user->email . time());
         $user->token = $token;
         // Token 过期时间设置为 5 分钟
-        $user->token_time_out = time() + ( 5 * 60 );
+        $user->token_time_out = time() + (5 * 60);
         try {
             $user->save();
         } catch (Throwable $throwable) {
-            throw new ServerException("更新token失败！".$throwable->getMessage(), 500);
+            throw new ServerException("更新token失败！" . $throwable->getMessage(), 500);
         }
         return ['code' => 200, 'msg' => '登录成功！', 'token' => $token, 'id' => $user->id];
     }
@@ -272,7 +275,7 @@ class UserController
     {
         /** @var User $user */
         $user = User::query()->find(trim($request->input('id')));
-        if (! isset($user->id)) {
+        if (!isset($user->id)) {
             throw new ServerException("用户不存在，请刷新后再操作！", 500);
         }
         $user->email = trim($request->input('email'));
@@ -298,7 +301,7 @@ class UserController
     {
         /** @var User $user */
         $user = User::query()->find(trim($request->input('id')));
-        if (! isset($user->id)) {
+        if (!isset($user->id)) {
             throw new ServerException('用户不存在，请刷新后再操作！', 500);
         }
         $user->state = trim($request->input('state'));
@@ -320,12 +323,12 @@ class UserController
      */
     public function selectOrQuery(UserSelectRequest $request): array
     {
-        $columns = ['id','email','state','created_at'];
+        $columns = ['id', 'email', 'state', 'created_at'];
         $perPage = (int)trim($request->input('perPage'));
         $page = (int)trim($request->input('page'));
         $email = trim($request->input('email'));
         if (!empty($email)) {
-            $userList = User::where('email', 'like' ,"{$email}%")
+            $userList = User::where('email', 'like', "{$email}%")
                 ->paginate($perPage, $columns, 'page', $page);
         } else {
             $userList = User::paginate($perPage, $columns, 'page', $page);

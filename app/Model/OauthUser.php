@@ -1,14 +1,15 @@
 <?php
 
 declare (strict_types=1);
+
 namespace App\Model;
 
 /**
- * @property int $id 
- * @property string $username 
- * @property string $password 
- * @property string $first_name 
- * @property string $last_name 
+ * @property int $id
+ * @property string $username
+ * @property string $password
+ * @property string $first_name
+ * @property string $last_name
  */
 class OauthUser extends Model
 {

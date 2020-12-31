@@ -25,7 +25,7 @@ class ClientRepository implements ClientRepositoryInterface
             $clientIdentifier,
             $oauthClient->name ?? '',
             $oauthClient->redirect ?? '',
-            (bool) ($oauthClient->is_confidential ?? null)
+            (bool)($oauthClient->is_confidential ?? null)
         );
     }
 
@@ -35,16 +35,16 @@ class ClientRepository implements ClientRepositoryInterface
      * @param string|null $grantType
      * @return bool
      */
-    public function validateClient($clientIdentifier, $clientSecret, $grantType) : bool
+    public function validateClient($clientIdentifier, $clientSecret, $grantType): bool
     {
         $oauthClient = $this->getClientData($clientIdentifier);
         if ($oauthClient === null) {
             return false;
         }
-        if (! $this->isGranted($oauthClient, $grantType)) {
+        if (!$this->isGranted($oauthClient, $grantType)) {
             return false;
         }
-        if (empty($oauthClient->secret) || ! password_verify((string) $clientSecret, $oauthClient->secret)) {
+        if (empty($oauthClient->secret) || !password_verify((string)$clientSecret, $oauthClient->secret)) {
             return false;
         }
         return true;
@@ -55,15 +55,15 @@ class ClientRepository implements ClientRepositoryInterface
      * @param string|null $grantType
      * @return bool
      */
-    protected function isGranted(OauthClient $oauthClient, string $grantType = null) : bool
+    protected function isGranted(OauthClient $oauthClient, string $grantType = null): bool
     {
         switch ($grantType) {
             case 'authorization_code':
-                return ! ($oauthClient->personal_access_client || $oauthClient->password_client);
+                return !($oauthClient->personal_access_client || $oauthClient->password_client);
             case 'personal_access':
-                return (bool) $oauthClient->personal_access_client;
+                return (bool)$oauthClient->personal_access_client;
             case 'password':
-                return (bool) $oauthClient->password_client;
+                return (bool)$oauthClient->password_client;
             default:
                 return true;
         }

@@ -1,13 +1,14 @@
 <?php
 
 declare (strict_types=1);
+
 namespace App\Model;
 
 /**
- * @property string $id 
- * @property string $access_token_id 
- * @property int $revoked 
- * @property string $expires_at 
+ * @property string $id
+ * @property string $access_token_id
+ * @property int $revoked
+ * @property string $expires_at
  */
 class OauthRefreshToken extends Model
 {

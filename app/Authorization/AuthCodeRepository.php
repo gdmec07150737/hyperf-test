@@ -26,7 +26,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
      * @param AuthCodeEntityInterface $authCodeEntity
      * @throws UniqueTokenIdentifierConstraintViolationException
      */
-    public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity) : void
+    public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity): void
     {
         $oauthAuthCode = new OauthAuthCode();
         $oauthAuthCode->id = $authCodeEntity->getIdentifier();
@@ -49,7 +49,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     /**
      * @param string $codeId
      */
-    public function revokeAuthCode($codeId) : void
+    public function revokeAuthCode($codeId): void
     {
         /** @var OauthAuthCode $oauthAuthCode */
         $oauthAuthCode = OauthAuthCode::query()->find($codeId);
@@ -61,14 +61,14 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
      * @param string $codeId
      * @return bool
      */
-    public function isAuthCodeRevoked($codeId) : bool
+    public function isAuthCodeRevoked($codeId): bool
     {
         /** @var OauthAuthCode $oauthAuthCode */
         $oauthAuthCode = OauthAuthCode::query()->find($codeId);
         if (empty($oauthAuthCode->id)) {
             return false;
         }
-        return (bool) $oauthAuthCode->revoked;
+        return (bool)$oauthAuthCode->revoked;
     }
 
     /**

@@ -7,15 +7,15 @@ namespace App\Model;
 use Carbon\Carbon;
 
 /**
- * @property int $id 
- * @property int $user_id 
- * @property string $name 
- * @property string $secret 
- * @property string $redirect 
- * @property int $personal_access_client 
- * @property int $password_client 
- * @property int $revoked 
- * @property int $is_confidential 
+ * @property int $id
+ * @property int $user_id
+ * @property string $name
+ * @property string $secret
+ * @property string $redirect
+ * @property int $personal_access_client
+ * @property int $password_client
+ * @property int $revoked
+ * @property int $is_confidential
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */

@@ -37,7 +37,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
      * @param AccessTokenEntityInterface $accessTokenEntity
      * @throws UniqueTokenIdentifierConstraintViolationException
      */
-    public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity) : void
+    public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity): void
     {
         $oauthAccessToken = new OauthAccessToken();
         $oauthAccessToken->id = $accessTokenEntity->getIdentifier();
@@ -59,7 +59,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
     /**
      * @param string $tokenId
      */
-    public function revokeAccessToken($tokenId) : void
+    public function revokeAccessToken($tokenId): void
     {
         /** @var OauthAccessToken $oauthAccessToken */
         $oauthAccessToken = OauthAccessToken::query()->find($tokenId);
@@ -72,7 +72,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
      * @return bool
      * @throws OAuthServerException
      */
-    public function isAccessTokenRevoked($tokenId) : bool
+    public function isAccessTokenRevoked($tokenId): bool
     {
         /** @var OauthAccessToken $oauthAccessToken */
         $oauthAccessToken = OauthAccessToken::query()->find($tokenId);

@@ -5,7 +5,7 @@ declare (strict_types=1);
 namespace App\Model;
 
 /**
- * @property string $id 
+ * @property string $id
  */
 class OauthScope extends Model
 {

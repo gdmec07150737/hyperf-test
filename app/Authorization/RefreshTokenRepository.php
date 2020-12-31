@@ -22,7 +22,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
      * @param RefreshTokenEntityInterface $refreshTokenEntity
      * @throws UniqueTokenIdentifierConstraintViolationException
      */
-    public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity) : void
+    public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity): void
     {
         $oauthRefreshToken = new OauthRefreshToken();
         $oauthRefreshToken->id = $refreshTokenEntity->getIdentifier();
@@ -42,7 +42,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
     /**
      * @param string $tokenId
      */
-    public function revokeRefreshToken($tokenId) : void
+    public function revokeRefreshToken($tokenId): void
     {
         /** @var OauthRefreshToken $oauthRefreshToken */
         $oauthRefreshToken = OauthRefreshToken::query()->find($tokenId);
@@ -54,13 +54,13 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
      * @param string $tokenId
      * @return bool
      */
-    public function isRefreshTokenRevoked($tokenId) : bool
+    public function isRefreshTokenRevoked($tokenId): bool
     {
         /** @var OauthRefreshToken $oauthRefreshToken */
         $oauthRefreshToken = OauthRefreshToken::query()->find($tokenId);
         if (empty($oauthRefreshToken->id)) {
             return false;
         }
-        return (bool) $oauthRefreshToken->revoked;
+        return (bool)$oauthRefreshToken->revoked;
     }
 }

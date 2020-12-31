@@ -16,13 +16,13 @@ use League\OAuth2\Server\Grant\RefreshTokenGrant;
 class SetAuthorizationServer
 {
     /** @var ClientRepository */
-    protected  $clientRepository;
+    protected $clientRepository;
 
     /** @var ScopeRepository */
-    protected  $scopeRepository;
+    protected $scopeRepository;
 
     /** @var AccessTokenRepository */
-    protected  $accessTokenRepository;
+    protected $accessTokenRepository;
 
     /** @var UserRepository */
     protected $userRepository;

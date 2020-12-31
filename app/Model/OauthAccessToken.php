@@ -7,15 +7,15 @@ namespace App\Model;
 use Carbon\Carbon;
 
 /**
- * @property string $id 
+ * @property string $id
  * @property string $user_id
  * @property string $client_id
- * @property string $name 
- * @property string $scopes 
- * @property int $revoked 
+ * @property string $name
+ * @property string $scopes
+ * @property int $revoked
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property string $expires_at 
+ * @property string $expires_at
  */
 class OauthAccessToken extends Model
 {
