@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\DeleteMapping;
 use Hyperf\HttpServer\Annotation\GetMapping;
@@ -31,6 +32,12 @@ use App\Request\UserUpdateRequest;
 class UserController
 {
     /**
+     * @Inject
+     * @var SetAuthorizationServer
+     */
+    private $server;
+
+    /**
      * @PostMapping(path="test-client-credentials-grant")
      * @param RequestInterface $request
      * @param ResponseInterface $response
@@ -41,8 +48,7 @@ class UserController
         ResponseInterface $response
     ): ?Psr7ResponseInterface
     {
-        $authorizationServer = new SetAuthorizationServer();
-        $server = $authorizationServer->clientCredentialsGrant();
+        $server = $this->server->clientCredentialsGrant();
         try {
             return $server->respondToAccessTokenRequest($request, $response);
         } catch (OAuthServerException $e) {
@@ -60,8 +66,7 @@ class UserController
      */
     public function testPasswordGrant(RequestInterface $request, ResponseInterface $response): ?Psr7ResponseInterface
     {
-        $authorizationServer = new SetAuthorizationServer();
-        $server = $authorizationServer->passwordGrant();
+        $server = $this->server->passwordGrant();
         try {
             return $server->respondToAccessTokenRequest($request, $response);
         } catch (OAuthServerException $e) {
@@ -82,8 +87,7 @@ class UserController
         ResponseInterface $response
     ): ?Psr7ResponseInterface
     {
-        $authorizationServer = new SetAuthorizationServer();
-        $server = $authorizationServer->refreshTokenGrant();
+        $server = $this->server->refreshTokenGrant();
         try {
             return $server->respondToAccessTokenRequest($request, $response);
         } catch (OAuthServerException $e) {
@@ -101,8 +105,7 @@ class UserController
      */
     public function testImplicitGrant(RequestInterface $request, ResponseInterface $response): ?Psr7ResponseInterface
     {
-        $authorizationServer = new SetAuthorizationServer();
-        $server = $authorizationServer->implicitGrant();
+        $server = $this->server->implicitGrant();
         try {
             $authRequest = $server->validateAuthorizationRequest($request);
             $authRequest->setUser(new UserEntity('test'));
@@ -126,9 +129,8 @@ class UserController
         ResponseInterface $response
     ): ?Psr7ResponseInterface
     {
-        $authorizationServer = new SetAuthorizationServer();
         try {
-            $server = $authorizationServer->authorizationCodeGrant();
+            $server = $this->server->authorizationCodeGrant();
             $authRequest = $server->validateAuthorizationRequest($request);
             $authRequest->setUser(new UserEntity('user_test'));
             $authRequest->setAuthorizationApproved(true);

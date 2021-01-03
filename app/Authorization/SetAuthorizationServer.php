@@ -36,9 +36,9 @@ class SetAuthorizationServer
     /** @var AuthorizationServer */
     protected $server;
 
-    protected $privateKey = '/mnt/e/code/php-code/private-new.key';
+    protected $privateKey = '';
 
-    protected $encryptionKey = 'T2x2+1OGrElaminasS+01OUmwhOcJiGmE58UD1fllNn6CGcQ=';
+    protected $encryptionKey = '';
 
     public function __construct()
     {
@@ -52,8 +52,8 @@ class SetAuthorizationServer
             $this->clientRepository,
             $this->accessTokenRepository,
             $this->scopeRepository,
-            $this->privateKey,
-            $this->encryptionKey
+            $this->privateKey = config('authorization.private_key'),
+            $this->encryptionKey = config('authorization.encryption_key')
         );
     }
 
@@ -64,7 +64,7 @@ class SetAuthorizationServer
     {
         $this->server->enableGrantType(
             new ClientCredentialsGrant(),
-            new DateInterval('PT1H')
+            new DateInterval(config('authorization.client_credentials_grant.access_token_ttl'))
         );
         return $this->server;
     }
@@ -80,7 +80,7 @@ class SetAuthorizationServer
         );
         $this->server->enableGrantType(
             $grant,
-            new DateInterval('PT1H')
+            new DateInterval(config('authorization.password_grant.access_token_ttl'))
         );
         return $this->server;
     }
@@ -91,10 +91,12 @@ class SetAuthorizationServer
     public function refreshTokenGrant(): AuthorizationServer
     {
         $grant = new RefreshTokenGrant($this->refreshTokenRepository);
-        $grant->setRefreshTokenTTL(new DateInterval('P1M'));
+        $grant->setRefreshTokenTTL(
+            new DateInterval(config('authorization.refresh_token_grant.refresh_token_ttl'))
+        );
         $this->server->enableGrantType(
             $grant,
-            new DateInterval('PT1H')
+            new DateInterval(config('authorization.refresh_token_grant.access_token_ttl'))
         );
         return $this->server;
     }
@@ -105,8 +107,10 @@ class SetAuthorizationServer
     public function implicitGrant(): AuthorizationServer
     {
         $this->server->enableGrantType(
-            new ImplicitGrant(new DateInterval('PT1H')),
-            new DateInterval('PT1H')
+            new ImplicitGrant(
+                new DateInterval(config('authorization.implicit_grant.implicit_grant_ttl'))
+            ),
+            new DateInterval(config('authorization.implicit_grant.access_token_ttl'))
         );
         return $this->server;
     }
@@ -120,12 +124,14 @@ class SetAuthorizationServer
         $grant = new AuthCodeGrant(
             $this->authCodeRepository,
             $this->refreshTokenRepository,
-            new DateInterval('PT10M')
+            new DateInterval(config('authorization.auth_code_grant.auth_code_grant_ttl'))
         );
-        $grant->setRefreshTokenTTL(new DateInterval('P1M'));
+        $grant->setRefreshTokenTTL(
+            new DateInterval(config('authorization.auth_code_grant.refresh_token_ttl'))
+        );
         $this->server->enableGrantType(
             $grant,
-            new DateInterval('PT1H')
+            new DateInterval(config('authorization.auth_code_grant.access_token_ttl'))
         );
         return $this->server;
     }
