@@ -20,6 +20,7 @@ use App\Authorization\SetAuthorizationServer;
 use App\Exception\ServerException;
 use App\Model\User;
 use App\Middleware\VerifyLogin;
+use App\Middleware\ValidateAccessTokensMiddleware;
 use App\Request\UserDeleteRequest;
 use App\Request\UserLoginRequest;
 use App\Request\UserRegisteredRequest;
@@ -56,6 +57,18 @@ class UserController
         } catch (Throwable $e) {
             throw new ServerException($e->getMessage(), 500);
         }
+    }
+
+    /**
+     * @PostMapping(path="test-access-token")
+     * @Middleware(ValidateAccessTokensMiddleware::class)
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @return array
+     */
+    public function testValidateAccessToken(RequestInterface $request, ResponseInterface $response)
+    {
+        return ['code' => 200, 'msg' => '测试 access token 成功！'];
     }
 
     /**
