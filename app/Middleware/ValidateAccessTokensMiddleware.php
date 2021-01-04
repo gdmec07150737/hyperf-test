@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Middleware;
 
 use Hyperf\Di\Annotation\Inject;
-use App\Authorization\AccessTokenRepository;
 use Hyperf\Utils\Context;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Middleware\ResourceServerMiddleware;
@@ -15,6 +14,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use App\Authorization\AccessTokenRepository;
 
 class ValidateAccessTokensMiddleware implements MiddlewareInterface
 {
