@@ -49,9 +49,8 @@ class UserController
         ResponseInterface $response
     ): ?Psr7ResponseInterface
     {
-        $server = $this->server->clientCredentialsGrant();
         try {
-            return $server->respondToAccessTokenRequest($request, $response);
+            return $this->server->getServer()->respondToAccessTokenRequest($request, $response);
         } catch (OAuthServerException $e) {
             return $e->generateHttpResponse($response);
         } catch (Throwable $e) {
@@ -79,9 +78,8 @@ class UserController
      */
     public function testPasswordGrant(RequestInterface $request, ResponseInterface $response): ?Psr7ResponseInterface
     {
-        $server = $this->server->passwordGrant();
         try {
-            return $server->respondToAccessTokenRequest($request, $response);
+            return $this->server->getServer()->respondToAccessTokenRequest($request, $response);
         } catch (OAuthServerException $e) {
             return $e->generateHttpResponse($response);
         } catch (Throwable $e) {
@@ -100,9 +98,8 @@ class UserController
         ResponseInterface $response
     ): ?Psr7ResponseInterface
     {
-        $server = $this->server->refreshTokenGrant();
         try {
-            return $server->respondToAccessTokenRequest($request, $response);
+            return $this->server->getServer()->respondToAccessTokenRequest($request, $response);
         } catch (OAuthServerException $e) {
             return $e->generateHttpResponse($response);
         } catch (Throwable $e) {
@@ -118,9 +115,8 @@ class UserController
      */
     public function testImplicitGrant(RequestInterface $request, ResponseInterface $response): ?Psr7ResponseInterface
     {
-        $server = $this->server->implicitGrant();
         try {
-            $authRequest = $server->validateAuthorizationRequest($request);
+            $authRequest = $this->server->getServer()->validateAuthorizationRequest($request);
             $authRequest->setUser(new UserEntity('test'));
             $authRequest->setAuthorizationApproved(true);
             return $server->completeAuthorizationRequest($authRequest, $response);
@@ -143,8 +139,7 @@ class UserController
     ): ?Psr7ResponseInterface
     {
         try {
-            $server = $this->server->authorizationCodeGrant();
-            $authRequest = $server->validateAuthorizationRequest($request);
+            $authRequest = $this->server->getServer()->validateAuthorizationRequest($request);
             $authRequest->setUser(new UserEntity('user_test'));
             $authRequest->setAuthorizationApproved(true);
             return $server->completeAuthorizationRequest($authRequest, $response);

@@ -55,6 +55,25 @@ class SetAuthorizationServer
             $this->privateKey = config('authorization.private_key'),
             $this->encryptionKey = config('authorization.encryption_key')
         );
+        $serverTypeList = explode('|',config('authorization.server_type'));
+        foreach ($serverTypeList as $serverType) {
+            if ($serverType === 'client_credentials') {
+                $this->clientCredentialsGrant();
+            } else if ($serverType === 'password') {
+                $this->passwordGrant();
+            } else if ($serverType === 'refresh_token') {
+                $this->refreshTokenGrant();
+            } else if ($serverType === 'token') {
+                $this->implicitGrant();
+            } else if ($serverType === 'authorization_code') {
+                $this->authorizationCodeGrant();
+            }
+        }
+    }
+
+    public function getServer()
+    {
+        return $this->server;
     }
 
     /**

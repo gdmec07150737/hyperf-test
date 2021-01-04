@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'private_key' => env('AUTH_PRIVATE_KEY', '/mnt/e/code/php-code/private-new.key'),
     'public_key' => env('AUTH_PUBLIC_KEY', '/mnt/e/code/php-code/public-new.key'),
+    'server_type' => env('SERVER_TYPE', 'client_credentials|password|refresh_token'),
     //加密密钥字符串，通过 base64_encode(random_bytes(32)) 产生。注意如果随意改变它会导致验证和刷新 token 有问题
     'encryption_key' => env('AUTH_ENCRYPTION_KEY', 'T2x2+1OGrElaminasS+01OUmwhOcJiGmE58UD1fllNn6CGcQ='),
     'client_credentials_grant' => [
