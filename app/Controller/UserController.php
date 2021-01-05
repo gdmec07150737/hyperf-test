@@ -67,6 +67,9 @@ class UserController
      */
     public function testValidateAccessToken(RequestInterface $request, ResponseInterface $response)
     {
+        var_dump($request->getAttribute('token'));
+        var_dump('-------------------------');
+        var_dump($request->getAttribute('user'));
         return ['code' => 200, 'msg' => '测试 access token 成功！'];
     }
 

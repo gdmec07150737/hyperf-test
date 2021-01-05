@@ -47,9 +47,7 @@ class ValidateAccessTokensMiddleware implements MiddlewareInterface
             ]);
         }
         /** @var OauthAccessToken $oauthAccessToken */
-        $oauthAccessToken = OauthAccessToken::query()->where('id', $token->getClaim('jti'))->first([
-            'id', 'user_id', 'client_id', 'scopes'
-        ]);
+        $oauthAccessToken = OauthAccessToken::query()->where('id', $token->getClaim('jti'))->first();
         if (empty($oauthAccessToken->id)) {
             return $response->withStatus(401)->json([
                 'message' => '没有 access-token,请重新登录！'
@@ -72,8 +70,9 @@ class ValidateAccessTokensMiddleware implements MiddlewareInterface
             $request = $server->validateAuthenticatedRequest($request);
             $email = $request->getAttribute('oauth_user_id');
             $user = User::query()->where('email', $email)->first();
-            $request = Context::override(ServerRequestInterface::class, function (ServerRequestInterface $request) use ($user) {
-                return $request->withAttribute('user', $user);
+            $request = Context::override(ServerRequestInterface::class, function (ServerRequestInterface $request) use ($user, $oauthAccessToken) {
+                $request = $request->withAttribute('user', $user);
+                return $request->withAttribute('token', $oauthAccessToken);
             });
         } catch (OAuthServerException $exception) {
             return $exception->generateHttpResponse($response);
