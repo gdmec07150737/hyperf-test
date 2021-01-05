@@ -66,11 +66,10 @@ class ValidateAccessTokensMiddleware implements MiddlewareInterface
             'oauth_user_id' => $oauthAccessToken->user_id,
             'oauth_scopes' => $oauthAccessToken->scopes
         ];
-        $request->getBody()->write(json_encode($requestBody));
+        $newRequest = $request->withParsedBody($requestBody);
         try {
-            $request = $server->validateAuthenticatedRequest($request);
-            $userId = $request->getAttribute('oauth_user_id');
-            $user = OauthUser::query()->where('username', $userId)->first();
+            $request = $server->validateAuthenticatedRequest($newRequest);
+            $user = OauthUser::query()->where('username', $oauthAccessToken->user_id)->first();
             $request = Context::override(ServerRequestInterface::class, function (ServerRequestInterface $request) use ($user, $oauthAccessToken) {
                 $request = $request->withAttribute('user', $user);
                 return $request->withAttribute('token', $oauthAccessToken);

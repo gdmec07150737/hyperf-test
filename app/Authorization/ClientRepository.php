@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Authorization;
 
+use App\Model\User;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
 use App\Authorization\Entity\ClientEntity;
@@ -81,5 +82,35 @@ class ClientRepository implements ClientRepositoryInterface
             return null;
         }
         return $oauthClient;
+    }
+
+    /**
+     * @param User $user
+     * @param string $name
+     * @param string $redirect
+     * @param int $personalAccessClient
+     * @param int $password_client
+     * @param int $revoked
+     * @return \Hyperf\Database\Model\Builder|\Hyperf\Database\Model\Model
+     */
+    public function addClientEntity(
+        User $user,
+        string $name = 'Password Grant Client',
+        string $redirect = 'http://localhost',
+        int $personalAccessClient = 0,
+        int $password_client = 1,
+        int $revoked = 0
+    ){
+        return OauthClient::query()->create(
+            [
+                'user_id' => $user->id,
+                'name' => $name,
+                'secret' => md5($user->email . time()),
+                'redirect' => $redirect,
+                'personal_access_client' => $personalAccessClient,
+                'password_client' => $password_client,
+                'revoked' => $revoked,
+            ]
+        );
     }
 }

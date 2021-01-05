@@ -15,10 +15,12 @@ use Hyperf\HttpServer\Contract\ResponseInterface;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use Psr\Http\Message\ResponseInterface as Psr7ResponseInterface;
 use Throwable;
+use App\Authorization\ClientRepository;
 use App\Authorization\Entity\UserEntity;
 use App\Authorization\SetAuthorizationServer;
 use App\Exception\ServerException;
 use App\Model\User;
+use App\Model\OauthClient;
 use App\Middleware\VerifyLogin;
 use App\Middleware\ValidateAccessTokensMiddleware;
 use App\Request\UserDeleteRequest;
@@ -81,8 +83,20 @@ class UserController
      */
     public function testPasswordGrant(RequestInterface $request, ResponseInterface $response): ?Psr7ResponseInterface
     {
+        $clientRepository = new ClientRepository();
+        /** @var OauthClient $oauthClient */
+        $oauthClient = $clientRepository->addClientEntity($user);
+        $requestBody = [
+            'grant_type' => 'password',
+            'client_id' => $oauthClient->id,
+            'client_secret' => $oauthClient->secret,
+            'scope' => '*',
+            'username' => $request->input('email'),
+            'password' => $request->input('password')
+        ];
+        $newRequest = $request->withParsedBody($requestBody);
         try {
-            return $this->server->getServer()->respondToAccessTokenRequest($request, $response);
+            return $this->server->getServer()->respondToAccessTokenRequest($newRequest, $response);
         } catch (OAuthServerException $e) {
             return $e->generateHttpResponse($response);
         } catch (Throwable $e) {
