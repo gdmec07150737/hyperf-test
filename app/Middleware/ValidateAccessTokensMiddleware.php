@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Middleware;
 
 use App\Model\OauthAccessToken;
+use App\Model\OauthUser;
 use App\Model\User;
 use Exception;
 use Hyperf\Utils\Context;
@@ -68,8 +69,8 @@ class ValidateAccessTokensMiddleware implements MiddlewareInterface
         $request->getBody()->write(json_encode($requestBody));
         try {
             $request = $server->validateAuthenticatedRequest($request);
-            $email = $request->getAttribute('oauth_user_id');
-            $user = User::query()->where('email', $email)->first();
+            $userId = $request->getAttribute('oauth_user_id');
+            $user = OauthUser::query()->where('username', $userId)->first();
             $request = Context::override(ServerRequestInterface::class, function (ServerRequestInterface $request) use ($user, $oauthAccessToken) {
                 $request = $request->withAttribute('user', $user);
                 return $request->withAttribute('token', $oauthAccessToken);
