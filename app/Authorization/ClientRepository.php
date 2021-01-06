@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Authorization;
 
+use App\Model\OauthUser;
 use App\Model\User;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
@@ -13,7 +14,7 @@ use App\Model\OauthClient;
 class ClientRepository implements ClientRepositoryInterface
 {
     /**
-     * @param string $clientIdentifier
+     * @param string|int $clientIdentifier
      * @return ClientEntity|ClientEntityInterface|null
      */
     public function getClientEntity($clientIdentifier)
@@ -45,7 +46,7 @@ class ClientRepository implements ClientRepositoryInterface
         if (!$this->isGranted($oauthClient, $grantType)) {
             return false;
         }
-        if (empty($oauthClient->secret) || !password_verify((string)$clientSecret, $oauthClient->secret)) {
+        if (empty($oauthClient->secret) || ($clientSecret !== $oauthClient->secret)) {
             return false;
         }
         return true;
@@ -71,13 +72,13 @@ class ClientRepository implements ClientRepositoryInterface
     }
 
     /**
-     * @param string $clientIdentifier
+     * @param int $clientIdentifier
      * @return OauthClient|null
      */
-    public function getClientData(string $clientIdentifier): ?OauthClient
+    public function getClientData($clientIdentifier): ?OauthClient
     {
         /** @var OauthClient $oauthClient */
-        $oauthClient = OauthClient::query()->where('name', $clientIdentifier)->first();
+        $oauthClient = OauthClient::query()->where('id', $clientIdentifier)->first();
         if (empty($oauthClient->id)) {
             return null;
         }
@@ -85,7 +86,7 @@ class ClientRepository implements ClientRepositoryInterface
     }
 
     /**
-     * @param User $user
+     * @param OauthUser $user
      * @param string $name
      * @param string $redirect
      * @param int $personalAccessClient
@@ -94,7 +95,7 @@ class ClientRepository implements ClientRepositoryInterface
      * @return \Hyperf\Database\Model\Builder|\Hyperf\Database\Model\Model
      */
     public function addClientEntity(
-        User $user,
+        OauthUser $user,
         string $name = 'Password Grant Client',
         string $redirect = 'http://localhost',
         int $personalAccessClient = 0,
@@ -105,7 +106,7 @@ class ClientRepository implements ClientRepositoryInterface
             [
                 'user_id' => $user->id,
                 'name' => $name,
-                'secret' => md5($user->email . time()),
+                'secret' => md5($user->username . time()),
                 'redirect' => $redirect,
                 'personal_access_client' => $personalAccessClient,
                 'password_client' => $password_client,

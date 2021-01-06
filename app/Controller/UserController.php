@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\OauthUser;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\DeleteMapping;
@@ -83,15 +84,17 @@ class UserController
      */
     public function testPasswordGrant(RequestInterface $request, ResponseInterface $response): ?Psr7ResponseInterface
     {
+        /** @var OauthUser $oauthUser */
+        $oauthUser = OauthUser::query()->where('username', trim($request->input('username')))->first();
         $clientRepository = new ClientRepository();
         /** @var OauthClient $oauthClient */
-        $oauthClient = $clientRepository->addClientEntity($user);
+        $oauthClient = $clientRepository->addClientEntity($oauthUser);
         $requestBody = [
             'grant_type' => 'password',
             'client_id' => $oauthClient->id,
             'client_secret' => $oauthClient->secret,
-            'scope' => '*',
-            'username' => $request->input('email'),
+            'scope' => 'test',
+            'username' => $request->input('username'),
             'password' => $request->input('password')
         ];
         $newRequest = $request->withParsedBody($requestBody);

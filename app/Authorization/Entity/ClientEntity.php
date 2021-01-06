@@ -15,12 +15,12 @@ class ClientEntity implements ClientEntityInterface
     /**
      * ClientEntity constructor.
      *
-     * @param string $identifier
+     * @param string|int $identifier
      * @param string $name
      * @param string $redirectUri
      * @param bool $isConfidential
      */
-    public function __construct(string $identifier, string $name, string $redirectUri, bool $isConfidential = false)
+    public function __construct($identifier, string $name, string $redirectUri, bool $isConfidential = false)
     {
         $this->setIdentifier($identifier);
         $this->name = $name;
