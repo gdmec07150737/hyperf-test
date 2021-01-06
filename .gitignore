@@ -11,5 +11,4 @@ vendor/
 .DS_Store
 *.lock
 .phpunit*
-private.key
-public.key
+*.key
