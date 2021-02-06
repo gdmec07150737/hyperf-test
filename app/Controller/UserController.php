@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Model\OauthUser;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\DeleteMapping;
@@ -22,6 +21,7 @@ use App\Authorization\SetAuthorizationServer;
 use App\Exception\ServerException;
 use App\Model\User;
 use App\Model\OauthClient;
+use App\Model\OauthUser;
 use App\Middleware\VerifyLogin;
 use App\Middleware\ValidateAccessTokensMiddleware;
 use App\Request\UserDeleteRequest;
@@ -31,7 +31,7 @@ use App\Request\UserSelectRequest;
 use App\Request\UserUpdateRequest;
 
 /**
- * @Controller()
+ * @Controller
  */
 class UserController
 {
@@ -50,8 +50,7 @@ class UserController
     public function testClientCredentialsGrant(
         RequestInterface $request,
         ResponseInterface $response
-    ): ?Psr7ResponseInterface
-    {
+    ): ?Psr7ResponseInterface {
         try {
             return $this->server->getServer()->respondToAccessTokenRequest($request, $response);
         } catch (OAuthServerException $e) {
@@ -68,11 +67,11 @@ class UserController
      * @param ResponseInterface $response
      * @return array
      */
-    public function testValidateAccessToken(RequestInterface $request, ResponseInterface $response)
+    public function testValidateAccessToken(RequestInterface $request, ResponseInterface $response): array
     {
-        var_dump($request->getAttribute('token'));
-        var_dump('-------------------------');
-        var_dump($request->getAttribute('user'));
+//        var_dump($request->getAttribute('token'));
+//        var_dump('-------------------------');
+//        var_dump($request->getAttribute('user'));
         return ['code' => 200, 'msg' => '测试 access token 成功！'];
     }
 
@@ -95,7 +94,7 @@ class UserController
             'client_secret' => $oauthClient->secret,
             'scope' => 'test',
             'username' => $request->input('username'),
-            'password' => $request->input('password')
+            'password' => $request->input('password'),
         ];
         $newRequest = $request->withParsedBody($requestBody);
         try {
@@ -116,8 +115,7 @@ class UserController
     public function testRefreshTokenGrant(
         RequestInterface $request,
         ResponseInterface $response
-    ): ?Psr7ResponseInterface
-    {
+    ): ?Psr7ResponseInterface {
         try {
             return $this->server->getServer()->respondToAccessTokenRequest($request, $response);
         } catch (OAuthServerException $e) {
@@ -139,7 +137,7 @@ class UserController
             $authRequest = $this->server->getServer()->validateAuthorizationRequest($request);
             $authRequest->setUser(new UserEntity('test'));
             $authRequest->setAuthorizationApproved(true);
-            return $server->completeAuthorizationRequest($authRequest, $response);
+            return $this->server->getServer()->completeAuthorizationRequest($authRequest, $response);
         } catch (OAuthServerException $e) {
             return $e->generateHttpResponse($response);
         } catch (Throwable $e) {
@@ -156,13 +154,12 @@ class UserController
     public function testAuthorizationCodeGrant(
         RequestInterface $request,
         ResponseInterface $response
-    ): ?Psr7ResponseInterface
-    {
+    ): ?Psr7ResponseInterface {
         try {
             $authRequest = $this->server->getServer()->validateAuthorizationRequest($request);
             $authRequest->setUser(new UserEntity('user_test'));
             $authRequest->setAuthorizationApproved(true);
-            return $server->completeAuthorizationRequest($authRequest, $response);
+            return $this->server->getServer()->completeAuthorizationRequest($authRequest, $response);
         } catch (OAuthServerException $e) {
             return $e->generateHttpResponse($response);
         } catch (Throwable $e) {
@@ -172,7 +169,6 @@ class UserController
 
     /**
      * @GetMapping(path="/redirect")
-     * @return bool
      */
     public function testRedirect(): bool
     {
@@ -180,7 +176,7 @@ class UserController
     }
 
     /**
-     * 用户注册
+     * 用户注册.
      *
      * @PostMapping(path="registered")
      * @param UserRegisteredRequest $request
@@ -195,13 +191,13 @@ class UserController
         try {
             $user->save();
         } catch (Throwable $throwable) {
-            throw new ServerException("注册失败，请联系管理员！", 500);
+            throw new ServerException('注册失败，请联系管理员！', 500);
         }
         return ['code' => 200, 'msg' => '注册成功！'];
     }
 
     /**
-     * 用户退出登录
+     * 用户退出登录.
      *
      * @GetMapping(path="logout")
      * @Middleware(VerifyLogin::class)
@@ -217,13 +213,13 @@ class UserController
         try {
             $user->save();
         } catch (Throwable $throwable) {
-            throw new ServerException("退出登录失败，请联系管理员！", 500);
+            throw new ServerException('退出登录失败，请联系管理员！', 500);
         }
         return ['code' => 200, 'msg' => '退出登录成功！'];
     }
 
     /**
-     * 用户登录
+     * 用户登录.
      *
      * @PostMapping(path="login")
      * @param UserLoginRequest $request
@@ -235,11 +231,11 @@ class UserController
         $user = User::query()
             ->where('email', trim($request->input('email')))
             ->first();
-        if (!isset($user->id) || md5(trim($request->input('password')) . $user->salt) !== $user->password) {
-            throw new ServerException("用户名或密码错误！", 500);
+        if (! isset($user->id) || md5(trim($request->input('password')) . $user->salt) !== $user->password) {
+            throw new ServerException('用户名或密码错误！', 500);
         }
         if ($user->state !== 'normal') {
-            throw new ServerException("该用户账号被禁止登录，请联系管理员！", 500);
+            throw new ServerException('该用户账号被禁止登录，请联系管理员！', 500);
         }
         $token = md5($user->email . time());
         $user->token = $token;
@@ -248,13 +244,13 @@ class UserController
         try {
             $user->save();
         } catch (Throwable $throwable) {
-            throw new ServerException("更新token失败！" . $throwable->getMessage(), 500);
+            throw new ServerException('更新token失败！' . $throwable->getMessage(), 500);
         }
         return ['code' => 200, 'msg' => '登录成功！', 'token' => $token, 'id' => $user->id];
     }
 
     /**
-     * 添加用户账号
+     * 添加用户账号.
      *
      * @PostMapping(path="add_user")
      * @Middleware(VerifyLogin::class)
@@ -270,13 +266,13 @@ class UserController
         try {
             $user->save();
         } catch (Throwable $throwable) {
-            throw new ServerException("添加失败，请检查该邮箱是否已注册！", 500);
+            throw new ServerException('添加失败，请检查该邮箱是否已注册！', 500);
         }
         return ['code' => 200, 'msg' => '添加成功！'];
     }
 
     /**
-     * 删除用户账号
+     * 删除用户账号.
      *
      * @DeleteMapping(path="delete_user")
      * @Middleware(VerifyLogin::class)
@@ -294,7 +290,7 @@ class UserController
     }
 
     /**
-     * 修改用户信息
+     * 修改用户信息.
      *
      * @PostMapping(path="update_user")
      * @Middleware(VerifyLogin::class)
@@ -305,8 +301,8 @@ class UserController
     {
         /** @var User $user */
         $user = User::query()->find(trim($request->input('id')));
-        if (!isset($user->id)) {
-            throw new ServerException("用户不存在，请刷新后再操作！", 500);
+        if (! isset($user->id)) {
+            throw new ServerException('用户不存在，请刷新后再操作！', 500);
         }
         $user->email = trim($request->input('email'));
         $user->state = trim($request->input('state'));
@@ -316,7 +312,7 @@ class UserController
         } catch (Throwable $throwable) {
             throw new ServerException('修改失败,请检查该邮箱是否已注册！', 500);
         }
-        return ['code' => 200, "msg" => '修改用户账号信息成功！'];
+        return ['code' => 200, 'msg' => '修改用户账号信息成功！'];
     }
 
     /**
@@ -331,7 +327,7 @@ class UserController
     {
         /** @var User $user */
         $user = User::query()->find(trim($request->input('id')));
-        if (!isset($user->id)) {
+        if (! isset($user->id)) {
             throw new ServerException('用户不存在，请刷新后再操作！', 500);
         }
         $user->state = trim($request->input('state'));
@@ -340,11 +336,11 @@ class UserController
         } catch (Throwable $throwable) {
             throw new ServerException('修改用户状态失败！' . $throwable->getMessage(), 500);
         }
-        return ['code' => 200, "msg" => '修改用户账号信息成功！'];
+        return ['code' => 200, 'msg' => '修改用户账号信息成功！'];
     }
 
     /**
-     * 查询或者遍历用户账号
+     * 查询或者遍历用户账号.
      *
      * @GetMapping(path="select_or_query")
      * @Middleware(VerifyLogin::class)
@@ -354,10 +350,10 @@ class UserController
     public function selectOrQuery(UserSelectRequest $request): array
     {
         $columns = ['id', 'email', 'state', 'created_at'];
-        $perPage = (int)trim($request->input('perPage'));
-        $page = (int)trim($request->input('page'));
+        $perPage = (int) trim($request->input('perPage'));
+        $page = (int) trim($request->input('page'));
         $email = trim($request->input('email'));
-        if (!empty($email)) {
+        if (! empty($email)) {
             $userList = User::where('email', 'like', "{$email}%")
                 ->paginate($perPage, $columns, 'page', $page);
         } else {
@@ -367,7 +363,7 @@ class UserController
     }
 
     /**
-     * 根据id查询用户信息
+     * 根据id查询用户信息.
      *
      * @GetMapping(path="get_user")
      * @Middleware(VerifyLogin::class)
@@ -378,10 +374,9 @@ class UserController
     {
         /** @var User $user */
         $user = User::query()->find(trim($request->input('id')));
-        if (!isset($user->id)) {
+        if (! isset($user->id)) {
             throw new ServerException('用户不存在，请刷新后再操作！', 500);
         }
         return ['code' => 200, 'msg' => '查询用户成功!', 'data' => $user];
     }
-
 }
